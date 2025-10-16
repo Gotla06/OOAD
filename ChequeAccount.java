@@ -1,23 +1,55 @@
-package banking.entities;
+public class ChequeAccount extends Account implements Withdrawable {
+    private String employerName;
+    private String employerAddress;
 
-public class ChequeAccount extends Account {
-    private String employer;
-    private String companyAddress;
-
-    public ChequeAccount(String accountNumber, double balance, String branch,
-                         Customer customer, String employer, String companyAddress) {
-        super(accountNumber, balance, branch, customer);
-        this.employer = employer;
-        this.companyAddress = companyAddress;
+    public ChequeAccount(String accountNumber, double initialBalance, String branch,
+                         Customer customer, String employerName, String employerAddress) {
+        super(accountNumber, initialBalance, branch, customer);
+        this.employerName = employerName;
+        this.employerAddress = employerAddress;
     }
 
     @Override
-    public void withdraw(double amount) {
-        if (amount > 0 && amount <= balance) {
-            balance -= amount;
-        }
+    public String getAccountType() {
+        return "Cheque";
     }
 
-    public String getEmployer() { return employer; }
-    public String getCompanyAddress() { return companyAddress; }
+    @Override
+    public boolean canCloseAccount() {
+        return true;
+    }
+
+    @Override
+    public boolean withdrawable(double amount) {
+        return false;
+    }
+
+    @Override
+    public boolean withdraw(double amount) {
+        if (amount > 0 && amount <= getBalance()) {
+            setBalance(getBalance() - amount);
+            System.out.println("Withdrawn from Cheque Account " + getAccountNumber() +
+                    ": BWP " + amount + " | New Balance: BWP " + getBalance());
+            return true;
+        }
+        System.out.println("Withdrawal failed from Cheque Account " + getAccountNumber() +
+                ": Insufficient funds or invalid amount");
+        return false;
+    }
+
+    // Getters for employer information
+    public String getEmployerName() { return employerName; }
+    public String getEmployerAddress() { return employerAddress; }
+
+    public void setEmployerName(String employerName) { this.employerName = employerName; }
+    public void setEmployerAddress(String employerAddress) { this.employerAddress = employerAddress; }
+
+    @Override
+    public String toString() {
+        return "ChequeAccount{" +
+                "accountNumber='" + getAccountNumber() + '\'' +
+                ", balance=BWP " + getBalance() +
+                ", employer='" + employerName + '\'' +
+                '}';
+    }
 }

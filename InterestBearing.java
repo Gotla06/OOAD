@@ -1,6 +1,4 @@
-package banking.interfaces;
-
 public interface InterestBearing {
+    double calculateMonthlyInterest();
     void applyMonthlyInterest();
-    double getInterestRate();
 }

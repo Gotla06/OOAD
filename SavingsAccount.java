@@ -1,26 +1,36 @@
-package banking.entities;
-import banking.interfaces.InterestBearing;
-
 public class SavingsAccount extends Account implements InterestBearing {
-    private static final double INTEREST_RATE = 0.0005;
+    private static final double MONTHLY_INTEREST_RATE = 0.0005; // 0.05%
 
-    public SavingsAccount(String accountNumber, double balance, String branch, Customer customer) {
-        super(accountNumber, balance, branch, customer);
+    public SavingsAccount(String accountNumber, double initialBalance, String branch, Customer customer) {
+        super(accountNumber, initialBalance, branch, customer);
     }
 
     @Override
-    public void withdraw(double amount) {
-        System.out.println("Withdrawals not allowed from Savings Account");
+    public String getAccountType() {
+        return "Savings";
+    }
+
+    @Override
+    public boolean canCloseAccount() {
+        return true;
+    }
+
+    @Override
+    public double calculateMonthlyInterest() {
+        return getBalance() * MONTHLY_INTEREST_RATE;
     }
 
     @Override
     public void applyMonthlyInterest() {
-        double interest = balance * INTEREST_RATE;
-        balance += interest;
+        double interest = calculateMonthlyInterest();
+        deposit(interest);
+        System.out.println("Interest applied to Savings Account " + getAccountNumber() +
+                ": BWP " + interest);
     }
 
-    @Override
-    public double getInterestRate() {
-        return INTEREST_RATE;
+    // Savings account does not allow withdrawals (as per requirements)
+    public boolean withdraw(double amount) {
+        System.out.println("Error: Withdrawals not allowed from Savings account " + getAccountNumber());
+        return false;
     }
 }
