@@ -7,8 +7,14 @@ import javafx.stage.Stage;
 
 import java.util.Date;
 
-class BankLoginConsole extends Application {
+// Change from package-private to PUBLIC
+public class BankLoginConsole extends Application {
     private Bank bank = new Bank();
+
+    // Add this default constructor
+    public BankLoginConsole() {
+        // Default constructor required by JavaFX
+    }
 
     public static void main(String[] args) {
         launch(args);
@@ -36,29 +42,49 @@ class BankLoginConsole extends Application {
         accountTypeCombo.getSelectionModel().selectFirst();
 
         // --- Individual fields ---
+        Label firstNameLabel = new Label("First Name:");
         TextField firstNameField = new TextField();
         firstNameField.setPromptText("First Name");
+
+        Label lastNameLabel = new Label("Last Name:");
         TextField lastNameField = new TextField();
         lastNameField.setPromptText("Last Name");
+
+        Label addressLabel = new Label("Address:");
         TextField addressField = new TextField();
         addressField.setPromptText("Address");
+
+        Label idLabel = new Label("ID Number:");
         TextField idField = new TextField();
         idField.setPromptText("ID Number");
+
+        Label dobLabel = new Label("Date of Birth:");
         DatePicker dobPicker = new DatePicker();
 
         // --- Company fields ---
+        Label companyNameLabel = new Label("Company Name:");
         TextField companyNameField = new TextField();
         companyNameField.setPromptText("Company Name");
+
+        Label regNumberLabel = new Label("Registration Number:");
         TextField regNumberField = new TextField();
         regNumberField.setPromptText("Registration Number");
+
+        Label contactPersonLabel = new Label("Contact Person:");
         TextField contactPersonField = new TextField();
         contactPersonField.setPromptText("Contact Person");
 
-        // --- Layout ---
-        VBox fieldsBox = new VBox(10,
-                firstNameField, lastNameField, addressField, idField, dobPicker,
-                companyNameField, regNumberField, contactPersonField
-        );
+        // Create individual fields container
+        VBox individualFields = new VBox(5, firstNameLabel, firstNameField, lastNameLabel, lastNameField,
+                addressLabel, addressField, idLabel, idField, dobLabel, dobPicker);
+
+        // Create company fields container
+        VBox companyFields = new VBox(5, companyNameLabel, companyNameField, regNumberLabel, regNumberField,
+                contactPersonLabel, contactPersonField);
+
+        // Main fields container
+        VBox fieldsBox = new VBox(10);
+        fieldsBox.getChildren().addAll(individualFields, companyFields);
 
         Label resultLabel = new Label();
 
@@ -78,16 +104,13 @@ class BankLoginConsole extends Application {
         // --- Show/hide fields based on customer type ---
         Runnable updateVisibility = () -> {
             boolean individual = individualBtn.isSelected();
-            firstNameField.setVisible(individual);
-            lastNameField.setVisible(individual);
-            addressField.setVisible(individual);
-            idField.setVisible(individual);
-            dobPicker.setVisible(individual);
+            individualFields.setVisible(individual);
+            individualFields.setManaged(individual);
 
-            companyNameField.setVisible(!individual);
-            regNumberField.setVisible(!individual);
-            contactPersonField.setVisible(!individual);
+            companyFields.setVisible(!individual);
+            companyFields.setManaged(!individual);
         };
+
         individualBtn.setOnAction(e -> updateVisibility.run());
         companyBtn.setOnAction(e -> updateVisibility.run());
         updateVisibility.run();
@@ -105,7 +128,14 @@ class BankLoginConsole extends Application {
                     String lastName = lastNameField.getText().trim();
                     String address = addressField.getText().trim();
                     String idNum = idField.getText().trim();
-                    Date dob = java.sql.Date.valueOf(dobPicker.getValue());
+
+                    if (firstName.isEmpty() || lastName.isEmpty() || address.isEmpty() || idNum.isEmpty()) {
+                        resultLabel.setStyle("-fx-text-fill: red;");
+                        resultLabel.setText("⚠️ Please fill all individual fields");
+                        return;
+                    }
+
+                    Date dob = dobPicker.getValue() != null ? java.sql.Date.valueOf(dobPicker.getValue()) : new Date();
 
                     IndividualCustomer customer = new IndividualCustomer(
                             "CUST" + (int)(Math.random()*1000),
@@ -125,6 +155,12 @@ class BankLoginConsole extends Application {
                     String address = companyNameField.getText().trim();
                     String contact = contactPersonField.getText().trim();
 
+                    if (companyName.isEmpty() || regNum.isEmpty() || address.isEmpty() || contact.isEmpty()) {
+                        resultLabel.setStyle("-fx-text-fill: red;");
+                        resultLabel.setText("⚠️ Please fill all company fields");
+                        return;
+                    }
+
                     CompanyCustomer company = new CompanyCustomer(
                             "CUST" + (int)(Math.random()*1000),
                             companyName, regNum, address, contact
@@ -140,6 +176,7 @@ class BankLoginConsole extends Application {
             } catch (Exception ex) {
                 resultLabel.setStyle("-fx-text-fill: red;");
                 resultLabel.setText("⚠️ Error: " + ex.getMessage());
+                ex.printStackTrace(); // This will help debug any other issues
             }
         });
 
@@ -155,7 +192,7 @@ class BankLoginConsole extends Application {
             resultLabel.setText("");
         });
 
-        Scene scene = new Scene(root, 400, 550);
+        Scene scene = new Scene(root, 450, 600);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
