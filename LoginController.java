@@ -7,11 +7,9 @@ public class LoginController {
         this.bank = bank;
     }
 
-    // Business logic for login
     public void handleLogin(String username, String password) {
         // Input validation
         if (username == null || username.trim().isEmpty()) {
-            // In real implementation, you'd update the view through callbacks
             System.out.println("Username is required");
             return;
         }
@@ -23,10 +21,12 @@ public class LoginController {
 
         // Authentication logic
         if (authenticateUser(username, password)) {
-            System.out.println("Login successful!");
-            // Navigate to dashboard (to be implemented)
+            System.out.println("Login successful for: " + username);
+            bankController.showDashboardView(username);
         } else {
-            System.out.println("Invalid credentials");
+            System.out.println("Invalid credentials for: " + username);
+            // Show available customer IDs for help
+            bankController.displayAllCustomerIDs();
         }
     }
 
@@ -35,7 +35,18 @@ public class LoginController {
     }
 
     private boolean authenticateUser(String username, String password) {
-        // Demo authentication - in real system, check against database
-        return !username.isEmpty() && !password.isEmpty();
+        // Demo authentication - check if customer exists or use admin
+        if ("admin".equals(username) && "admin".equals(password)) {
+            return true;
+        }
+
+        // Check if customer exists in the bank
+        Customer customer = bank.getCustomer(username);
+        if (customer != null) {
+            System.out.println("Authenticated: " + customer.getFullName() + " (" + customer.getCustomerType() + ")");
+            return true;
+        }
+
+        return false;
     }
 }

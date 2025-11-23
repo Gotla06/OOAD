@@ -14,53 +14,62 @@ public class LoginView {
     private PasswordField passwordField;
     private Button loginButton;
     private Button createAccountButton;
+    private Button showIdsButton;
     private Label messageLabel;
+    private LoginController controller;
 
     public LoginView(LoginController controller) {
-        initializeUI(controller);
+        this.controller = controller;
+        initializeUI();
     }
 
-    private void initializeUI(LoginController controller) {
-        // Create UI components
+    private void initializeUI() {
         Label titleLabel = new Label("Banking System Login");
         titleLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
 
         usernameField = new TextField();
-        usernameField.setPromptText("Enter username");
-        usernameField.setMaxWidth(250);
+        usernameField.setPromptText("Enter Customer ID (e.g., CUST1)");
+        usernameField.setMaxWidth(300);
 
         passwordField = new PasswordField();
-        passwordField.setPromptText("Enter password");
-        passwordField.setMaxWidth(250);
+        passwordField.setPromptText("Enter password (any text for demo)");
+        passwordField.setMaxWidth(300);
 
         loginButton = new Button("Login");
         loginButton.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white;");
-        loginButton.setMaxWidth(250);
+        loginButton.setMaxWidth(300);
 
         createAccountButton = new Button("Create New Account");
         createAccountButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
-        createAccountButton.setMaxWidth(250);
+        createAccountButton.setMaxWidth(300);
+
+        showIdsButton = new Button("Show Available Customer IDs");
+        showIdsButton.setStyle("-fx-background-color: #FF9800; -fx-text-fill: white;");
+        showIdsButton.setMaxWidth(300);
 
         messageLabel = new Label();
+        messageLabel.setWrapText(true);
+        messageLabel.setMaxWidth(300);
 
-        // Layout
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(30));
         layout.setAlignment(Pos.CENTER);
         layout.getChildren().addAll(
                 titleLabel,
-                new Label("Username:"), usernameField,
+                new Label("Customer ID:"), usernameField,
                 new Label("Password:"), passwordField,
-                loginButton, createAccountButton, messageLabel
+                loginButton,
+                createAccountButton,
+                showIdsButton,
+                messageLabel
         );
 
-        scene = new Scene(layout, 400, 400);
+        scene = new Scene(layout, 500, 500);
 
-        // Connect to controller (NO BUSINESS LOGIC HERE)
-        setupEventHandlers(controller);
+        setupEventHandlers();
     }
 
-    private void setupEventHandlers(LoginController controller) {
+    private void setupEventHandlers() {
         loginButton.setOnAction(e -> {
             controller.handleLogin(getUsername(), getPassword());
         });
@@ -68,9 +77,16 @@ public class LoginView {
         createAccountButton.setOnAction(e -> {
             controller.handleCreateAccount();
         });
+
+        showIdsButton.setOnAction(e -> {
+            // This would ideally show a popup with available IDs
+            System.out.println("\n=== Available Customer IDs ===");
+            // In a real implementation, this would show a dialog with available IDs
+            messageLabel.setText("Check console for available Customer IDs");
+            messageLabel.setTextFill(Color.BLUE);
+        });
     }
 
-    // Pure getter methods - no business logic
     public String getUsername() {
         return usernameField.getText();
     }
@@ -79,9 +95,9 @@ public class LoginView {
         return passwordField.getText();
     }
 
-    public void setMessage(String message, boolean isError) {
+    public void setMessage(String message, boolean isSuccess) {
         messageLabel.setText(message);
-        messageLabel.setTextFill(isError ? Color.RED : Color.GREEN);
+        messageLabel.setTextFill(isSuccess ? Color.GREEN : Color.RED);
     }
 
     public void clearFields() {

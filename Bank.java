@@ -1,38 +1,62 @@
 import java.util.*;
-import java.text.SimpleDateFormat;
 
 public class Bank {
-    private List<Customer> customers;
-    private List<Account> accounts;
+    private Map<String, Customer> customers;
+    private Map<String, Account> accounts;
+    private Map<String, List<Transaction>> transactionHistory;
+    private int customerCounter;
+    private int accountCounter;
 
     public Bank() {
-        this.customers = new ArrayList<>();
-        this.accounts = new ArrayList<>();
+        this.customers = new HashMap<>();
+        this.accounts = new HashMap<>();
+        this.transactionHistory = new HashMap<>();
+        this.customerCounter = 1;
+        this.accountCounter = 1;
+        initializeSampleData();
     }
 
     // Customer management
     public void addCustomer(Customer customer) {
-        customers.add(customer);
-        System.out.println("Customer added: " + customer.getFullName());
+        customers.put(customer.getCustomerId(), customer);
     }
 
-    public Customer findCustomerById(String customerId) {
-        return customers.stream()
-                .filter(c -> c.getCustomerId().equals(customerId))
-                .findFirst()
-                .orElse(null);
+    public Customer getCustomer(String customerId) {
+        return customers.get(customerId);
+    }
+
+    public List<Customer> getAllCustomers() {
+        return new ArrayList<>(customers.values());
     }
 
     // Account management
-    public void openAccount(Account account) {
-        accounts.add(account);
-        System.out.println("Account opened: " + account.getAccountNumber() +
-                " (" + account.getAccountType() + ")");
+    public boolean openAccount(Account account) {
+        // Validate investment account minimum balance
+        if (account instanceof InvestmentAccount && account.getBalance() < InvestmentAccount.getMinOpeningBalance()) {
+            System.out.println("Investment account requires minimum BWP 500.00 opening balance");
+            return false;
+        }
+
+        // Validate cheque account employment
+        if (account instanceof ChequeAccount && account.getCustomer() instanceof IndividualCustomer) {
+            IndividualCustomer individual = (IndividualCustomer) account.getCustomer();
+            if (!individual.canOpenAccount(AccountType.CHEQUE)) {
+                System.out.println("Individual customer must be employed to open a cheque account");
+                return false;
+            }
+        }
+
+        accounts.put(account.getAccountNumber(), account);
+        return true;
+    }
+
+    public Account getAccount(String accountNumber) {
+        return accounts.get(accountNumber);
     }
 
     public List<Account> getCustomerAccounts(String customerId) {
         List<Account> customerAccounts = new ArrayList<>();
-        for (Account account : accounts) {
+        for (Account account : accounts.values()) {
             if (account.getCustomer().getCustomerId().equals(customerId)) {
                 customerAccounts.add(account);
             }
@@ -40,143 +64,145 @@ public class Bank {
         return customerAccounts;
     }
 
-    public Account findAccountByNumber(String accountNumber) {
-        return accounts.stream()
-                .filter(a -> a.getAccountNumber().equals(accountNumber))
-                .findFirst()
-                .orElse(null);
+    public List<Account> getAllAccounts() {
+        return new ArrayList<>(accounts.values());
+    }
+
+    // Check if customer can open additional account of specific type
+    public boolean canOpenAdditionalAccount(String customerId, AccountType accountType) {
+        Customer customer = getCustomer(customerId);
+        if (customer == null) return false;
+
+        // Check if customer already has this account type
+        for (Account account : getCustomerAccounts(customerId)) {
+            if (account.getAccountType().equals(accountType.toString())) {
+                return false;
+            }
+        }
+
+        return customer.canOpenAccount(accountType);
     }
 
     // Transaction methods
-    public void depositToAccount(String accountNumber, double amount) {
-        Account account = findAccountByNumber(accountNumber);
-        if (account != null) {
+    public boolean deposit(String accountNumber, double amount) {
+        Account account = accounts.get(accountNumber);
+        if (account != null && amount > 0) {
             account.deposit(amount);
-        } else {
-            System.out.println("Account not found: " + accountNumber);
+            recordTransaction(accountNumber, "DEPOSIT", amount, "Deposit to account");
+            return true;
         }
+        return false;
     }
 
-    public void withdrawFromAccount(String accountNumber, double amount) {
-        Account account = findAccountByNumber(accountNumber);
-        if (account instanceof Withdrawable) {
-            ((Withdrawable) account).withdraw(amount);
-        } else {
-            System.out.println("Withdrawals not allowed for this account type");
+    public boolean withdraw(String accountNumber, double amount) {
+        Account account = accounts.get(accountNumber);
+        if (account != null && account instanceof Withdrawable) {
+            Withdrawable withdrawableAccount = (Withdrawable) account;
+            if (withdrawableAccount.withdraw(amount)) {
+                recordTransaction(accountNumber, "WITHDRAWAL", amount, "Withdrawal from account");
+                return true;
+            }
+        } else if (account != null) {
+            System.out.println("Withdrawals not allowed from " + account.getAccountType() + " account");
         }
+        return false;
     }
 
-    // Interest application
     public void applyMonthlyInterest() {
-        System.out.println("\n=== APPLYING MONTHLY INTEREST ===");
-        for (Account account : accounts) {
+        System.out.println("=== APPLYING MONTHLY INTEREST ===");
+        for (Account account : accounts.values()) {
             if (account instanceof InterestBearing) {
                 ((InterestBearing) account).applyMonthlyInterest();
             }
         }
     }
 
-    // Display methods
-    public void displayAllCustomers() {
-        System.out.println("\n=== ALL CUSTOMERS ===");
-        for (Customer customer : customers) {
-            System.out.println(customer);
-        }
+    // Transaction recording
+    private void recordTransaction(String accountNumber, String type, double amount, String description) {
+        Transaction transaction = new Transaction(accountNumber, type, amount, description);
+        transactionHistory.computeIfAbsent(accountNumber, k -> new ArrayList<>()).add(transaction);
     }
 
-    public void displayAllAccounts() {
-        System.out.println("\n=== ALL ACCOUNTS ===");
-        for (Account account : accounts) {
-            System.out.println(account);
-        }
+    public List<Transaction> getAccountTransactions(String accountNumber) {
+        return transactionHistory.getOrDefault(accountNumber, new ArrayList<>());
     }
 
-    public void displayCustomerAccounts(String customerId) {
-        Customer customer = findCustomerById(customerId);
-        if (customer != null) {
-            System.out.println("\n=== ACCOUNTS FOR " + customer.getFullName() + " ===");
-            List<Account> customerAccounts = getCustomerAccounts(customerId);
-            for (Account account : customerAccounts) {
-                System.out.println(account);
+    // Generate unique IDs
+    public String generateCustomerId() {
+        return "CUST" + (customerCounter++);
+    }
+
+    public String generateAccountNumber() {
+        return "ACC" + (accountCounter++);
+    }
+
+    // Initialize sample data with 10+ records as required
+    private void initializeSampleData() {
+        System.out.println("=== INITIALIZING SAMPLE DATA ===");
+
+        // Create 10 sample customers and accounts
+        for (int i = 1; i <= 10; i++) {
+            String customerId = "CUST" + i;
+
+            if (i % 2 == 0) {
+                // Individual customers (employed and unemployed)
+                boolean employed = i % 4 == 0; // Every 4th customer is employed
+                IndividualCustomer customer = new IndividualCustomer(
+                        customerId,
+                        "John" + i,
+                        "Doe" + i,
+                        "Address " + i + ", Gaborone",
+                        "ID" + i,
+                        new Date(),
+                        employed,
+                        employed ? "Company " + i : null,
+                        employed ? "Business Address " + i : null
+                );
+                addCustomer(customer);
+
+                // Create multiple accounts for some customers
+                if (i % 3 == 0) {
+                    // Customer with savings account
+                    openAccount(new SavingsAccount("ACC" + i + "S", 1000 + i * 100, "Gaborone Main", customer));
+                }
+                if (i % 3 == 1 || i % 3 == 0) {
+                    // Customer with investment account
+                    openAccount(new InvestmentAccount("ACC" + i + "I", 500 + i * 50, "Gaborone Main", customer));
+                }
+                if (employed) {
+                    // Employed customer with cheque account
+                    openAccount(new ChequeAccount("ACC" + i + "C", 2000 + i * 100, "Gaborone Main", customer,
+                            "Company " + i, "Business Address " + i));
+                }
+            } else {
+                // Company customers
+                CompanyCustomer company = new CompanyCustomer(
+                        customerId,
+                        "Company " + i + " Ltd",
+                        "REG" + i,
+                        "Business Address " + i + ", Gaborone",
+                        "Contact Person " + i
+                );
+                addCustomer(company);
+
+                // Companies can have any account type
+                openAccount(new ChequeAccount("ACC" + i + "B", 5000 + i * 200, "Gaborone Main", company,
+                        "Company " + i, "Business Address " + i));
+                if (i % 3 == 0) {
+                    openAccount(new InvestmentAccount("ACC" + i + "BI", 1000 + i * 100, "Gaborone Main", company));
+                }
             }
-        } else {
-            System.out.println("Customer not found: " + customerId);
         }
+
+        System.out.println("✅ Sample data initialized: " + customers.size() + " customers, " + accounts.size() + " accounts");
     }
 
-    // Main method for testing
-    public static void main(String[] args) throws Exception {
-        Bank bank = new Bank();
+    // Getters
+    public Map<String, Customer> getCustomers() {
+        return new HashMap<>(customers);
+    }
 
-        // Create date format for date of birth
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-
-        // Create individual customers
-        IndividualCustomer john = new IndividualCustomer("CUST001", "John", "Doe",
-                "123 Main St, Gaborone", "19901234567", sdf.parse("1990-05-15"));
-        IndividualCustomer mary = new IndividualCustomer("CUST002", "Mary", "Smith",
-                "456 Broad St, Francistown", "19911234568", sdf.parse("1991-08-20"));
-
-        // Create company customer
-        CompanyCustomer abcCorp = new CompanyCustomer("CUST003", "ABC Corporation",
-                "CORP123456", "789 Business Park, Gaborone", "Mr. James Brown");
-
-        // Add customers to bank
-        bank.addCustomer(john);
-        bank.addCustomer(mary);
-        bank.addCustomer(abcCorp);
-
-        // Create accounts for John
-        SavingsAccount johnSavings = new SavingsAccount("ACC001", 1000.00, "Gaborone Main", john);
-        InvestmentAccount johnInvestment = new InvestmentAccount("ACC002", 500.00, "Gaborone Main", john);
-        ChequeAccount johnCheque = new ChequeAccount("ACC003", 2000.00, "Gaborone Main", john,
-                "Tech Solutions", "123 Tech Park, Gaborone");
-
-        // Create accounts for Mary
-        SavingsAccount marySavings = new SavingsAccount("ACC004", 1500.00, "Francistown", mary);
-        InvestmentAccount maryInvestment = new InvestmentAccount("ACC005", 800.00, "Francistown", mary);
-
-        // Create account for ABC Corporation
-        ChequeAccount abcCheque = new ChequeAccount("ACC006", 5000.00, "Gaborone Main", abcCorp,
-                "ABC Corporation", "789 Business Park, Gaborone");
-
-        // Open accounts
-        bank.openAccount(johnSavings);
-        bank.openAccount(johnInvestment);
-        bank.openAccount(johnCheque);
-        bank.openAccount(marySavings);
-        bank.openAccount(maryInvestment);
-        bank.openAccount(abcCheque);
-
-        // Display all customers and accounts
-        bank.displayAllCustomers();
-        bank.displayAllAccounts();
-
-        // Test transactions
-        System.out.println("\n=== TESTING TRANSACTIONS ===");
-
-        // Deposits
-        bank.depositToAccount("ACC001", 500.00);  // John's savings
-        bank.depositToAccount("ACC006", 2000.00); // ABC Corp cheque
-
-        // Withdrawals
-        bank.withdrawFromAccount("ACC001", 200.00); // Should fail - savings account
-        bank.withdrawFromAccount("ACC002", 200.00); // John's investment
-        bank.withdrawFromAccount("ACC003", 500.00); // John's cheque
-        bank.withdrawFromAccount("ACC006", 1000.00); // ABC Corp cheque
-
-        // Apply monthly interest
-        bank.applyMonthlyInterest();
-
-        // Display customer accounts
-        bank.displayCustomerAccounts("CUST001");
-        bank.displayCustomerAccounts("CUST003");
-
-        // Test account balances
-        System.out.println("\n=== FINAL BALANCES ===");
-        System.out.println("John's Savings: BWP " + johnSavings.getBalance());
-        System.out.println("John's Investment: BWP " + johnInvestment.getBalance());
-        System.out.println("John's Cheque: BWP " + johnCheque.getBalance());
-        System.out.println("ABC Corp Cheque: BWP " + abcCheque.getBalance());
+    public Map<String, Account> getAccounts() {
+        return new HashMap<>(accounts);
     }
 }

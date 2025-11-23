@@ -11,26 +11,22 @@ public class AccountCreationView {
     private RadioButton individualBtn, companyBtn;
     private ComboBox<String> accountTypeCombo;
     private TextField firstNameField, lastNameField, addressField, idField;
-    private TextField companyNameField, regNumberField, contactPersonField;
+    private TextField companyNameField, regNumberField, contactPersonField, companyAddressField;
+    private TextField employerNameField, employerAddressField;
+    private CheckBox employedCheckbox;
     private DatePicker dobPicker;
     private Button createButton, backButton, clearButton;
     private Label messageLabel;
-    private VBox individualFields, companyFields;
+    private VBox individualFields, companyFields, employmentFields;
 
     public AccountCreationView(AccountController controller) {
         initializeUI(controller);
     }
 
     private void initializeUI(AccountController controller) {
-        // Initialize components
         initializeComponents();
-
-        // Create layout
         VBox root = createMainLayout();
-
-        scene = new Scene(root, 500, 650);
-
-        // Connect to controller
+        scene = new Scene(root, 600, 750); // Increased height for additional fields
         setupEventHandlers(controller);
         updateFieldVisibility();
     }
@@ -47,24 +43,30 @@ public class AccountCreationView {
         accountTypeCombo.getItems().addAll("Savings", "Investment", "Cheque");
         accountTypeCombo.getSelectionModel().selectFirst();
 
-        // Initialize all text fields
+        // Initialize all fields
         firstNameField = new TextField();
         lastNameField = new TextField();
-        addressField = new TextField();
+        addressField = new TextField(); // INDIVIDUAL ADDRESS FIELD
         idField = new TextField();
         dobPicker = new DatePicker();
+
         companyNameField = new TextField();
         regNumberField = new TextField();
         contactPersonField = new TextField();
+        companyAddressField = new TextField(); // COMPANY ADDRESS FIELD
+
+        employerNameField = new TextField();
+        employerAddressField = new TextField();
+        employedCheckbox = new CheckBox("Currently Employed");
 
         createButton = new Button("Create Account");
         backButton = new Button("Back to Login");
         clearButton = new Button("Clear");
         messageLabel = new Label();
 
-        // Create field containers
         individualFields = createIndividualFields();
         companyFields = createCompanyFields();
+        employmentFields = createEmploymentFields();
     }
 
     private VBox createMainLayout() {
@@ -77,7 +79,9 @@ public class AccountCreationView {
                 titleLabel,
                 new Label("Customer Type:"), createCustomerTypeBox(),
                 new Label("Account Type:"), accountTypeCombo,
-                individualFields, companyFields,
+                individualFields,
+                employmentFields,
+                companyFields,
                 createButtonsBox(),
                 messageLabel
         );
@@ -93,11 +97,21 @@ public class AccountCreationView {
 
     private VBox createIndividualFields() {
         VBox fields = new VBox(8,
-                new Label("First Name:"), firstNameField,
-                new Label("Last Name:"), lastNameField,
-                new Label("Address:"), addressField,
-                new Label("ID Number:"), idField,
-                new Label("Date of Birth:"), dobPicker
+                new Label("First Name:*"), firstNameField,
+                new Label("Last Name:*"), lastNameField,
+                new Label("Address:*"), addressField, // ADDED ADDRESS FIELD FOR INDIVIDUAL
+                new Label("ID Number:*"), idField,
+                new Label("Date of Birth:*"), dobPicker
+        );
+        fields.setStyle("-fx-border-color: #cccccc; -fx-border-width: 1px; -fx-padding: 15px;");
+        return fields;
+    }
+
+    private VBox createEmploymentFields() {
+        VBox fields = new VBox(8,
+                employedCheckbox,
+                new Label("Employer Name:"), employerNameField,
+                new Label("Employer Address:"), employerAddressField
         );
         fields.setStyle("-fx-border-color: #cccccc; -fx-border-width: 1px; -fx-padding: 15px;");
         return fields;
@@ -105,10 +119,10 @@ public class AccountCreationView {
 
     private VBox createCompanyFields() {
         VBox fields = new VBox(8,
-                new Label("Company Name:"), companyNameField,
-                new Label("Registration Number:"), regNumberField,
-                new Label("Address:"), addressField,
-                new Label("Contact Person:"), contactPersonField
+                new Label("Company Name:*"), companyNameField,
+                new Label("Registration Number:*"), regNumberField,
+                new Label("Company Address:*"), companyAddressField, // COMPANY ADDRESS FIELD
+                new Label("Contact Person:*"), contactPersonField
         );
         fields.setStyle("-fx-border-color: #cccccc; -fx-border-width: 1px; -fx-padding: 15px;");
         return fields;
@@ -125,11 +139,11 @@ public class AccountCreationView {
     }
 
     private void setupEventHandlers(AccountController controller) {
-        // Customer type toggle
         individualBtn.setOnAction(e -> updateFieldVisibility());
         companyBtn.setOnAction(e -> updateFieldVisibility());
+        employedCheckbox.setOnAction(e -> updateEmploymentFields());
+        accountTypeCombo.setOnAction(e -> updateEmploymentRequirement());
 
-        // Button actions
         createButton.setOnAction(e -> {
             controller.handleCreateAccount(
                     isIndividualCustomer(),
@@ -139,24 +153,46 @@ public class AccountCreationView {
             );
         });
 
-        clearButton.setOnAction(e -> {
-            clearAllFields();
-        });
-
-        backButton.setOnAction(e -> {
-            controller.handleBackToLogin();
-        });
+        clearButton.setOnAction(e -> clearAllFields());
+        backButton.setOnAction(e -> controller.handleBackToLogin());
     }
 
     private void updateFieldVisibility() {
         boolean individual = isIndividualCustomer();
         individualFields.setVisible(individual);
         individualFields.setManaged(individual);
+        employmentFields.setVisible(individual);
+        employmentFields.setManaged(individual);
         companyFields.setVisible(!individual);
         companyFields.setManaged(!individual);
+        updateEmploymentFields();
+        updateEmploymentRequirement();
     }
 
-    // Pure getter methods - no business logic
+    private void updateEmploymentFields() {
+        boolean employed = employedCheckbox.isSelected();
+        employerNameField.setDisable(!employed);
+        employerAddressField.setDisable(!employed);
+
+        // Clear fields if employment is unchecked
+        if (!employed) {
+            employerNameField.clear();
+            employerAddressField.clear();
+        }
+    }
+
+    private void updateEmploymentRequirement() {
+        // Highlight employment requirement for cheque accounts
+        if ("Cheque".equals(getAccountType()) && isIndividualCustomer()) {
+            employedCheckbox.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+            messageLabel.setText("Note: Employment information is REQUIRED for Cheque accounts");
+            messageLabel.setTextFill(Color.ORANGE);
+        } else {
+            employedCheckbox.setStyle("");
+            messageLabel.setText("");
+        }
+    }
+
     public boolean isIndividualCustomer() {
         return individualBtn.isSelected();
     }
@@ -169,9 +205,12 @@ public class AccountCreationView {
         return new IndividualFormData(
                 firstNameField.getText(),
                 lastNameField.getText(),
-                addressField.getText(),
+                addressField.getText(), // INDIVIDUAL ADDRESS
                 idField.getText(),
-                dobPicker.getValue()
+                dobPicker.getValue(),
+                employedCheckbox.isSelected(),
+                employerNameField.getText(),
+                employerAddressField.getText()
         );
     }
 
@@ -180,7 +219,7 @@ public class AccountCreationView {
                 companyNameField.getText(),
                 regNumberField.getText(),
                 contactPersonField.getText(),
-                addressField.getText()
+                companyAddressField.getText() // COMPANY ADDRESS
         );
     }
 
@@ -198,6 +237,10 @@ public class AccountCreationView {
         companyNameField.clear();
         regNumberField.clear();
         contactPersonField.clear();
+        companyAddressField.clear();
+        employerNameField.clear();
+        employerAddressField.clear();
+        employedCheckbox.setSelected(false);
         messageLabel.setText("");
     }
 
@@ -205,18 +248,23 @@ public class AccountCreationView {
         return scene;
     }
 
-    // Data transfer objects
     public static class IndividualFormData {
         public final String firstName, lastName, address, idNumber;
         public final java.time.LocalDate dateOfBirth;
+        public final boolean employed;
+        public final String employerName, employerAddress;
 
         public IndividualFormData(String firstName, String lastName, String address,
-                                  String idNumber, java.time.LocalDate dateOfBirth) {
+                                  String idNumber, java.time.LocalDate dateOfBirth,
+                                  boolean employed, String employerName, String employerAddress) {
             this.firstName = firstName;
             this.lastName = lastName;
             this.address = address;
             this.idNumber = idNumber;
             this.dateOfBirth = dateOfBirth;
+            this.employed = employed;
+            this.employerName = employerName;
+            this.employerAddress = employerAddress;
         }
     }
 

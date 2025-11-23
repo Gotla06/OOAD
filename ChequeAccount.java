@@ -7,6 +7,14 @@ public class ChequeAccount extends Account implements Withdrawable {
         super(accountNumber, initialBalance, branch, customer);
         this.employerName = employerName;
         this.employerAddress = employerAddress;
+
+        // Validate employment for individual customers
+        if (customer instanceof IndividualCustomer) {
+            IndividualCustomer individual = (IndividualCustomer) customer;
+            if (!individual.canOpenAccount(AccountType.CHEQUE)) {
+                throw new IllegalArgumentException("Individual customer must be employed to open a cheque account");
+            }
+        }
     }
 
     @Override
@@ -17,11 +25,6 @@ public class ChequeAccount extends Account implements Withdrawable {
     @Override
     public boolean canCloseAccount() {
         return true;
-    }
-
-    @Override
-    public boolean withdrawable(double amount) {
-        return false;
     }
 
     @Override
@@ -37,12 +40,9 @@ public class ChequeAccount extends Account implements Withdrawable {
         return false;
     }
 
-    // Getters for employer information
+    // Getters
     public String getEmployerName() { return employerName; }
     public String getEmployerAddress() { return employerAddress; }
-
-    public void setEmployerName(String employerName) { this.employerName = employerName; }
-    public void setEmployerAddress(String employerAddress) { this.employerAddress = employerAddress; }
 
     @Override
     public String toString() {

@@ -46,14 +46,12 @@ public abstract class Account {
     public Date getOpeningDate() { return openingDate; }
     public boolean isActive() { return active; }
     public String getBranch() { return branch; }
-
     public void setActive(boolean active) { this.active = active; }
 
     @Override
     public String toString() {
-        return "Account{" +
+        return getAccountType() + "Account{" +
                 "accountNumber='" + accountNumber + '\'' +
-                ", type='" + getAccountType() + '\'' +
                 ", balance=BWP " + balance +
                 ", customer=" + customer.getFullName() +
                 '}';

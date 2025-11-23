@@ -25,7 +25,7 @@ public class SavingsAccount extends Account implements InterestBearing {
         double interest = calculateMonthlyInterest();
         deposit(interest);
         System.out.println("Interest applied to Savings Account " + getAccountNumber() +
-                ": BWP " + interest);
+                ": BWP " + String.format("%.2f", interest));
     }
 
     // Savings account does not allow withdrawals (as per requirements)

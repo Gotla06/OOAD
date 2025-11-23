@@ -1,15 +1,11 @@
 public class CompanyCustomer extends Customer {
-    private String companyName;
     private String registrationNumber;
-    private String companyAddress;
     private String contactPerson;
 
     public CompanyCustomer(String customerId, String companyName, String registrationNumber,
-                           String companyAddress, String contactPerson) {
-        super(customerId, "", "", companyAddress);
-        this.companyName = companyName;
+                           String address, String contactPerson) {
+        super(customerId, companyName, "", address);
         this.registrationNumber = registrationNumber;
-        this.companyAddress = companyAddress;
         this.contactPerson = contactPerson;
     }
 
@@ -20,28 +16,24 @@ public class CompanyCustomer extends Customer {
     }
 
     @Override
-    public String getFullName() {
-        return companyName;
+    public String getCustomerType() {
+        return "Company";
     }
 
-    // Getters and setters
-    public String getCompanyName() { return companyName; }
-    public void setCompanyName(String companyName) { this.companyName = companyName; }
+    @Override
+    public String getFullName() {
+        return getFirstName(); // Company name is stored in firstName
+    }
 
+    // Getters
     public String getRegistrationNumber() { return registrationNumber; }
-    public void setRegistrationNumber(String registrationNumber) { this.registrationNumber = registrationNumber; }
-
-    public String getCompanyAddress() { return companyAddress; }
-    public void setCompanyAddress(String companyAddress) { this.companyAddress = companyAddress; }
-
     public String getContactPerson() { return contactPerson; }
-    public void setContactPerson(String contactPerson) { this.contactPerson = contactPerson; }
 
     @Override
     public String toString() {
         return "CompanyCustomer{" +
                 "customerId='" + getCustomerId() + '\'' +
-                ", companyName='" + companyName + '\'' +
+                ", companyName='" + getFullName() + '\'' +
                 ", registrationNumber='" + registrationNumber + '\'' +
                 '}';
     }

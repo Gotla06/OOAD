@@ -3,9 +3,9 @@ public class InvestmentAccount extends Account implements InterestBearing, Withd
     private static final double MIN_OPENING_BALANCE = 500.00;
 
     public InvestmentAccount(String accountNumber, double initialBalance, String branch, Customer customer) {
-        super(accountNumber, initialBalance, branch, customer);
+        super(accountNumber, Math.max(initialBalance, MIN_OPENING_BALANCE), branch, customer);
         if (initialBalance < MIN_OPENING_BALANCE) {
-            throw new IllegalArgumentException("Minimum opening balance for Investment account is BWP " + MIN_OPENING_BALANCE);
+            System.out.println("Warning: Investment account requires minimum BWP 500.00. Setting balance to BWP 500.00");
         }
     }
 
@@ -29,12 +29,7 @@ public class InvestmentAccount extends Account implements InterestBearing, Withd
         double interest = calculateMonthlyInterest();
         deposit(interest);
         System.out.println("Interest applied to Investment Account " + getAccountNumber() +
-                ": BWP " + interest);
-    }
-
-    @Override
-    public boolean withdrawable(double amount) {
-        return false;
+                ": BWP " + String.format("%.2f", interest));
     }
 
     @Override
@@ -48,5 +43,9 @@ public class InvestmentAccount extends Account implements InterestBearing, Withd
         System.out.println("Withdrawal failed from Investment Account " + getAccountNumber() +
                 ": Insufficient funds or invalid amount");
         return false;
+    }
+
+    public static double getMinOpeningBalance() {
+        return MIN_OPENING_BALANCE;
     }
 }
