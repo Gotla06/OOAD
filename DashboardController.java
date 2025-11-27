@@ -24,14 +24,13 @@ public class DashboardController {
         bankController.showAccountCreationView();
     }
 
+    // NEW METHODS FOR DEPOSIT AND WITHDRAWAL
     public void handleDeposit() {
-        System.out.println("Deposit functionality to be implemented");
-        // Would open a deposit dialog
+        bankController.showDepositView(currentCustomerId);
     }
 
     public void handleWithdraw() {
-        System.out.println("Withdraw functionality to be implemented");
-        // Would open a withdraw dialog
+        bankController.showWithdrawalView(currentCustomerId);
     }
 
     public void handleApplyInterest() {

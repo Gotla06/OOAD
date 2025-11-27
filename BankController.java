@@ -6,6 +6,7 @@ public class BankController {
     private LoginController loginController;
     private AccountController accountController;
     private DashboardController dashboardController;
+    private TransactionController transactionController;
 
     public BankController() {
         this.bank = new Bank();
@@ -16,6 +17,7 @@ public class BankController {
         this.loginController = new LoginController(this, bank);
         this.accountController = new AccountController(this, bank);
         this.dashboardController = new DashboardController(this, bank);
+        this.transactionController = new TransactionController(this, bank);
     }
 
     public void setPrimaryStage(Stage primaryStage) {
@@ -53,7 +55,6 @@ public class BankController {
             primaryStage.setScene(dashboardView.getScene());
             primaryStage.setTitle("Banking System - Dashboard - " + customer.getFullName());
         } else if ("admin".equals(customerId)) {
-            // Admin view
             dashboardController.setCurrentCustomer("admin");
             DashboardView dashboardView = new DashboardView(dashboardController, "Administrator", "admin");
             dashboardView.displayAccounts(getAllAccountsInfo());
@@ -63,6 +64,42 @@ public class BankController {
             System.out.println("Customer not found: " + customerId);
             showLoginViewWithMessage("Customer ID not found. Please try again.");
         }
+    }
+
+    // NEW TRANSACTION METHODS
+    public void showDepositView(String customerId) {
+        transactionController.setCurrentCustomer(customerId);
+        DepositView depositView = new DepositView(transactionController, customerId);
+        primaryStage.setScene(depositView.getScene());
+        primaryStage.setTitle("Deposit Funds - " + getCustomerName(customerId));
+    }
+
+    public void showDepositViewWithMessage(String message, boolean isSuccess) {
+        String customerId = transactionController.getCurrentCustomerId();
+        DepositView depositView = new DepositView(transactionController, customerId);
+        depositView.setMessage(message, isSuccess);
+        primaryStage.setScene(depositView.getScene());
+        primaryStage.setTitle("Deposit Funds - " + getCustomerName(customerId));
+    }
+
+    public void showWithdrawalView(String customerId) {
+        transactionController.setCurrentCustomer(customerId);
+        WithdrawalView withdrawalView = new WithdrawalView(transactionController, customerId);
+        primaryStage.setScene(withdrawalView.getScene());
+        primaryStage.setTitle("Withdraw Funds - " + getCustomerName(customerId));
+    }
+
+    public void showWithdrawalViewWithMessage(String message, boolean isSuccess) {
+        String customerId = transactionController.getCurrentCustomerId();
+        WithdrawalView withdrawalView = new WithdrawalView(transactionController, customerId);
+        withdrawalView.setMessage(message, isSuccess);
+        primaryStage.setScene(withdrawalView.getScene());
+        primaryStage.setTitle("Withdraw Funds - " + getCustomerName(customerId));
+    }
+
+    private String getCustomerName(String customerId) {
+        Customer customer = bank.getCustomer(customerId);
+        return customer != null ? customer.getFullName() : "Unknown Customer";
     }
 
     private String getAllAccountsInfo() {
@@ -101,7 +138,6 @@ public class BankController {
         return sb.toString();
     }
 
-    // Method to display all customer IDs for reference
     public void displayAllCustomerIDs() {
         System.out.println("\n" + "=".repeat(50));
         System.out.println("AVAILABLE CUSTOMER IDs FOR LOGIN");

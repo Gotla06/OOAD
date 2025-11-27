@@ -15,12 +15,14 @@ public class DashboardView {
     private Button depositButton;
     private Button withdrawButton;
     private Button interestButton;
+    private DashboardController controller;
 
     public DashboardView(DashboardController controller, String customerName, String customerId) {
-        initializeUI(controller, customerName, customerId);
+        this.controller = controller;
+        initializeUI(customerName, customerId);
     }
 
-    private void initializeUI(DashboardController controller, String customerName, String customerId) {
+    private void initializeUI(String customerName, String customerId) {
         welcomeLabel = new Label("Welcome, " + customerName + "! (ID: " + customerId + ")");
         welcomeLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
 
@@ -71,6 +73,10 @@ public class DashboardView {
         scene = new Scene(layout, 700, 600);
 
         // Event handlers
+        setupEventHandlers();
+    }
+
+    private void setupEventHandlers() {
         logoutButton.setOnAction(e -> controller.handleLogout());
         refreshButton.setOnAction(e -> controller.handleRefresh());
         addAccountButton.setOnAction(e -> controller.handleAddAccount());
