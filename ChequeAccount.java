@@ -15,6 +15,7 @@ public class ChequeAccount extends Account implements Withdrawable {
                 throw new IllegalArgumentException("Individual customer must be employed to open a cheque account");
             }
         }
+        System.out.println("🏦 Created Cheque Account: " + accountNumber + " for " + customer.getFullName());
     }
 
     @Override
@@ -31,11 +32,11 @@ public class ChequeAccount extends Account implements Withdrawable {
     public boolean withdraw(double amount) {
         if (amount > 0 && amount <= getBalance()) {
             setBalance(getBalance() - amount);
-            System.out.println("Withdrawn from Cheque Account " + getAccountNumber() +
+            System.out.println("💸 Withdrawn from Cheque Account " + getAccountNumber() +
                     ": BWP " + amount + " | New Balance: BWP " + getBalance());
             return true;
         }
-        System.out.println("Withdrawal failed from Cheque Account " + getAccountNumber() +
+        System.out.println("❌ Withdrawal failed from Cheque Account " + getAccountNumber() +
                 ": Insufficient funds or invalid amount");
         return false;
     }

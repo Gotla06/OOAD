@@ -5,8 +5,9 @@ public class InvestmentAccount extends Account implements InterestBearing, Withd
     public InvestmentAccount(String accountNumber, double initialBalance, String branch, Customer customer) {
         super(accountNumber, Math.max(initialBalance, MIN_OPENING_BALANCE), branch, customer);
         if (initialBalance < MIN_OPENING_BALANCE) {
-            System.out.println("Warning: Investment account requires minimum BWP 500.00. Setting balance to BWP 500.00");
+            System.out.println("⚠️ Warning: Investment account requires minimum BWP 500.00. Setting balance to BWP 500.00");
         }
+        System.out.println("📈 Created Investment Account: " + accountNumber + " for " + customer.getFullName());
     }
 
     @Override
@@ -28,7 +29,7 @@ public class InvestmentAccount extends Account implements InterestBearing, Withd
     public void applyMonthlyInterest() {
         double interest = calculateMonthlyInterest();
         deposit(interest);
-        System.out.println("Interest applied to Investment Account " + getAccountNumber() +
+        System.out.println("💹 Interest applied to Investment Account " + getAccountNumber() +
                 ": BWP " + String.format("%.2f", interest));
     }
 
@@ -36,11 +37,11 @@ public class InvestmentAccount extends Account implements InterestBearing, Withd
     public boolean withdraw(double amount) {
         if (amount > 0 && amount <= getBalance()) {
             setBalance(getBalance() - amount);
-            System.out.println("Withdrawn from Investment Account " + getAccountNumber() +
+            System.out.println("💸 Withdrawn from Investment Account " + getAccountNumber() +
                     ": BWP " + amount + " | New Balance: BWP " + getBalance());
             return true;
         }
-        System.out.println("Withdrawal failed from Investment Account " + getAccountNumber() +
+        System.out.println("❌ Withdrawal failed from Investment Account " + getAccountNumber() +
                 ": Insufficient funds or invalid amount");
         return false;
     }

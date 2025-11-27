@@ -66,7 +66,6 @@ public class BankController {
         }
     }
 
-    // NEW TRANSACTION METHODS
     public void showDepositView(String customerId) {
         transactionController.setCurrentCustomer(customerId);
         DepositView depositView = new DepositView(transactionController, customerId);
@@ -107,30 +106,35 @@ public class BankController {
         sb.append("ADMIN VIEW - ALL ACCOUNTS\n");
         sb.append("========================\n\n");
 
-        sb.append("EXISTING CUSTOMER IDs FOR LOGIN:\n");
-        sb.append("--------------------------------\n");
-        for (Customer customer : bank.getAllCustomers()) {
-            sb.append("ID: ").append(customer.getCustomerId())
-                    .append(" - ").append(customer.getFullName())
-                    .append(" (").append(customer.getCustomerType()).append(")\n");
-        }
-        sb.append("\nACCOUNT DETAILS:\n");
-        sb.append("----------------\n");
+        if (bank.getAllCustomers().isEmpty()) {
+            sb.append("No customers found in the system.\n");
+            sb.append("Create accounts using the 'Create New Account' feature.\n");
+        } else {
+            sb.append("EXISTING CUSTOMERS:\n");
+            sb.append("-------------------\n");
+            for (Customer customer : bank.getAllCustomers()) {
+                sb.append("ID: ").append(customer.getCustomerId())
+                        .append(" - ").append(customer.getFullName())
+                        .append(" (").append(customer.getCustomerType()).append(")\n");
+            }
+            sb.append("\nACCOUNT DETAILS:\n");
+            sb.append("----------------\n");
 
-        for (Customer customer : bank.getAllCustomers()) {
-            sb.append("\n").append(customer.getFullName())
-                    .append(" (").append(customer.getCustomerId()).append("):\n");
+            for (Customer customer : bank.getAllCustomers()) {
+                sb.append("\n").append(customer.getFullName())
+                        .append(" (").append(customer.getCustomerId()).append("):\n");
 
-            java.util.List<Account> accounts = bank.getCustomerAccounts(customer.getCustomerId());
-            if (accounts.isEmpty()) {
-                sb.append("  No accounts\n");
-            } else {
-                for (Account account : accounts) {
-                    sb.append("  - ").append(account.getAccountType())
-                            .append(": ").append(account.getAccountNumber())
-                            .append(" | Balance: BWP ").append(String.format("%.2f", account.getBalance()))
-                            .append(" | Branch: ").append(account.getBranch())
-                            .append("\n");
+                java.util.List<Account> accounts = bank.getCustomerAccounts(customer.getCustomerId());
+                if (accounts.isEmpty()) {
+                    sb.append("  No accounts\n");
+                } else {
+                    for (Account account : accounts) {
+                        sb.append("  - ").append(account.getAccountType())
+                                .append(": ").append(account.getAccountNumber())
+                                .append(" | Balance: BWP ").append(String.format("%.2f", account.getBalance()))
+                                .append(" | Branch: ").append(account.getBranch())
+                                .append("\n");
+                    }
                 }
             }
         }
@@ -142,10 +146,15 @@ public class BankController {
         System.out.println("\n" + "=".repeat(50));
         System.out.println("AVAILABLE CUSTOMER IDs FOR LOGIN");
         System.out.println("=".repeat(50));
-        for (Customer customer : bank.getAllCustomers()) {
-            System.out.println("ID: " + customer.getCustomerId() +
-                    " - " + customer.getFullName() +
-                    " (" + customer.getCustomerType() + ")");
+
+        if (bank.getAllCustomers().isEmpty()) {
+            System.out.println("No customers found. Create accounts first!");
+        } else {
+            for (Customer customer : bank.getAllCustomers()) {
+                System.out.println("ID: " + customer.getCustomerId() +
+                        " - " + customer.getFullName() +
+                        " (" + customer.getCustomerType() + ")");
+            }
         }
         System.out.println("Admin: admin / admin");
         System.out.println("=".repeat(50) + "\n");

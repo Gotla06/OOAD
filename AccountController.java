@@ -13,46 +13,55 @@ public class AccountController {
                                     AccountCreationView.IndividualFormData individualData,
                                     AccountCreationView.CompanyFormData companyData) {
         try {
+            System.out.println("🔧 Starting account creation process...");
+            System.out.println("   Customer Type: " + (isIndividual ? "Individual" : "Company"));
+            System.out.println("   Requested Account Type: " + accountType);
+
             // First validate input
-            if (!validateInput(isIndividual, individualData, companyData)) {
+            if (!validateInput(isIndividual, individualData, companyData, accountType)) {
+                System.out.println("❌ Validation failed");
                 return;
             }
 
             String customerId = null;
             boolean success;
             String customerName = "";
-            String accountNumber = "";
+            String createdAccountType = "";
 
             if (isIndividual) {
                 CreateAccountResult result = createIndividualAccount(individualData, accountType);
                 customerId = result.customerId;
                 success = result.success;
                 customerName = individualData.firstName + " " + individualData.lastName;
-                accountNumber = result.accountNumber;
+                createdAccountType = result.accountType;
             } else {
                 CreateAccountResult result = createCompanyAccount(companyData, accountType);
                 customerId = result.customerId;
                 success = result.success;
                 customerName = companyData.companyName;
-                accountNumber = result.accountNumber;
+                createdAccountType = result.accountType;
             }
 
             if (success && customerId != null) {
                 // SHOW COMPLETE SUCCESS MESSAGE
-                displaySuccessMessage(customerName, customerId, accountType, accountNumber);
+                displaySuccessMessage(customerName, customerId, createdAccountType);
 
                 // Show success message and return to login
                 String successMessage = String.format(
-                        "Account created successfully!\nCustomer: %s\nCustomer ID: %s\nUse this ID to login",
-                        customerName, customerId
+                        "Account created successfully!\nCustomer: %s\nCustomer ID: %s\nAccount Type: %s\nUse this ID to login",
+                        customerName, customerId, createdAccountType
                 );
                 bankController.showLoginViewWithMessage(successMessage);
+
+                // Debug: Print all accounts to verify
+                bank.debugPrintAllAccounts();
             } else {
-                System.out.println("Failed to create account. Please check the requirements.");
+                System.out.println("❌ Failed to create account. Please check the requirements.");
             }
 
         } catch (Exception e) {
-            System.out.println("Error creating account: " + e.getMessage());
+            System.out.println("❌ Error creating account: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -62,15 +71,15 @@ public class AccountController {
 
     private boolean validateInput(boolean isIndividual,
                                   AccountCreationView.IndividualFormData individualData,
-                                  AccountCreationView.CompanyFormData companyData) {
+                                  AccountCreationView.CompanyFormData companyData, String accountType) {
         if (isIndividual) {
-            return validateIndividualData(individualData);
+            return validateIndividualData(individualData, accountType);
         } else {
             return validateCompanyData(companyData);
         }
     }
 
-    private boolean validateIndividualData(AccountCreationView.IndividualFormData data) {
+    private boolean validateIndividualData(AccountCreationView.IndividualFormData data, String accountType) {
         if (data.firstName == null || data.firstName.trim().isEmpty()) {
             System.out.println("First name is required");
             return false;
@@ -92,8 +101,9 @@ public class AccountController {
             return false;
         }
         // Additional validation for cheque accounts
-        if (data.employed && (data.employerName == null || data.employerName.trim().isEmpty())) {
-            System.out.println("Employer name is required for employed individuals");
+        if (accountType.equals("Cheque") && data.employed &&
+                (data.employerName == null || data.employerName.trim().isEmpty())) {
+            System.out.println("Employer name is required for employed individuals opening cheque accounts");
             return false;
         }
         return true;
@@ -133,7 +143,7 @@ public class AccountController {
             AccountType accType = AccountType.valueOf(accountType.toUpperCase());
             if (!customer.canOpenAccount(accType)) {
                 System.out.println("Customer cannot open " + accountType + " account. Employment required for cheque accounts.");
-                return new CreateAccountResult(false, null, null);
+                return new CreateAccountResult(false, null, null, null);
             }
 
             bank.addCustomer(customer);
@@ -142,17 +152,25 @@ public class AccountController {
             double initialBalance = accountType.equalsIgnoreCase("investment") ?
                     InvestmentAccount.getMinOpeningBalance() : 0.0;
 
+            System.out.println("🔧 Creating " + accountType + " account for " + customer.getFullName());
+            System.out.println("   Account Number: " + accNum);
+            System.out.println("   Initial Balance: BWP " + initialBalance);
+
             Account account = createAccount(accountType, accNum, initialBalance, "Gaborone Main", customer);
             boolean accountOpened = bank.openAccount(account);
 
             if (accountOpened) {
-                return new CreateAccountResult(true, customerId, accNum);
+                System.out.println("✅ Successfully created " + accountType + " account: " + accNum);
+                return new CreateAccountResult(true, customerId, accountType, accNum);
+            } else {
+                System.out.println("❌ Failed to create " + accountType + " account");
             }
-            return new CreateAccountResult(false, null, null);
+            return new CreateAccountResult(false, null, null, null);
 
         } catch (Exception e) {
-            System.out.println("Error creating individual account: " + e.getMessage());
-            return new CreateAccountResult(false, null, null);
+            System.out.println("❌ Error creating individual account: " + e.getMessage());
+            e.printStackTrace();
+            return new CreateAccountResult(false, null, null, null);
         }
     }
 
@@ -170,49 +188,61 @@ public class AccountController {
             double initialBalance = accountType.equalsIgnoreCase("investment") ?
                     InvestmentAccount.getMinOpeningBalance() : 0.0;
 
+            System.out.println("🔧 Creating " + accountType + " account for " + company.getFullName());
+            System.out.println("   Account Number: " + accNum);
+            System.out.println("   Initial Balance: BWP " + initialBalance);
+
             Account account = createAccount(accountType, accNum, initialBalance, "Gaborone Main", company);
             boolean accountOpened = bank.openAccount(account);
 
             if (accountOpened) {
-                return new CreateAccountResult(true, customerId, accNum);
+                System.out.println("✅ Successfully created " + accountType + " account: " + accNum);
+                return new CreateAccountResult(true, customerId, accountType, accNum);
             }
-            return new CreateAccountResult(false, null, null);
+            return new CreateAccountResult(false, null, null, null);
 
         } catch (Exception e) {
-            System.out.println("Error creating company account: " + e.getMessage());
-            return new CreateAccountResult(false, null, null);
+            System.out.println("❌ Error creating company account: " + e.getMessage());
+            e.printStackTrace();
+            return new CreateAccountResult(false, null, null, null);
         }
     }
 
     private Account createAccount(String type, String accNum, double balance,
                                   String branch, Customer customer) {
+        System.out.println("🔧 createAccount() called with type: '" + type + "'");
+
         switch (type.toLowerCase()) {
             case "savings":
+                System.out.println("💰 Creating Savings Account: " + accNum);
                 return new SavingsAccount(accNum, balance, branch, customer);
             case "investment":
+                System.out.println("📈 Creating Investment Account: " + accNum);
                 return new InvestmentAccount(accNum, balance, branch, customer);
             case "cheque":
+                System.out.println("🏦 Creating Cheque Account: " + accNum);
                 if (customer instanceof IndividualCustomer) {
                     IndividualCustomer individual = (IndividualCustomer) customer;
                     return new ChequeAccount(accNum, balance, branch, customer,
                             individual.getEmployerName(), individual.getEmployerAddress());
                 } else {
+                    // For companies, use company name as employer
                     return new ChequeAccount(accNum, balance, branch, customer,
-                            "Self", customer.getAddress());
+                            ((CompanyCustomer) customer).getFullName(), customer.getAddress());
                 }
             default:
+                System.out.println("❌ Unknown account type: " + type);
                 throw new IllegalArgumentException("Invalid account type: " + type);
         }
     }
 
-    private void displaySuccessMessage(String customerName, String customerId, String accountType, String accountNumber) {
+    private void displaySuccessMessage(String customerName, String customerId, String accountType) {
         System.out.println("\n" + "=".repeat(60));
         System.out.println("🎉 ACCOUNT CREATION SUCCESSFUL!");
         System.out.println("=".repeat(60));
         System.out.println("Customer Name: " + customerName);
         System.out.println("Customer ID: " + customerId);
         System.out.println("Account Type: " + accountType);
-        System.out.println("Account Number: " + accountNumber);
         System.out.println("=".repeat(60));
         System.out.println("💡 IMPORTANT: Use Customer ID '" + customerId + "' to login!");
         System.out.println("📝 Password can be any text (system uses simple validation)");
@@ -223,11 +253,13 @@ public class AccountController {
     private static class CreateAccountResult {
         boolean success;
         String customerId;
+        String accountType;
         String accountNumber;
 
-        CreateAccountResult(boolean success, String customerId, String accountNumber) {
+        CreateAccountResult(boolean success, String customerId, String accountType, String accountNumber) {
             this.success = success;
             this.customerId = customerId;
+            this.accountType = accountType;
             this.accountNumber = accountNumber;
         }
     }

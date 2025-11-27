@@ -25,8 +25,16 @@ public class LoginController {
             bankController.showDashboardView(username);
         } else {
             System.out.println("Invalid credentials for: " + username);
+
             // Show available customer IDs for help
-            bankController.displayAllCustomerIDs();
+            if (bank.getAllCustomers().isEmpty()) {
+                System.out.println("💡 No customers found. Click 'Create New Account' to create your first account!");
+            } else {
+                System.out.println("💡 Available Customer IDs:");
+                for (Customer customer : bank.getAllCustomers()) {
+                    System.out.println("  - " + customer.getCustomerId() + " (" + customer.getFullName() + ")");
+                }
+            }
         }
     }
 

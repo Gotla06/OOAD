@@ -9,7 +9,7 @@ public class Transaction {
     private Date timestamp;
 
     public Transaction(String accountNumber, String type, double amount, String description) {
-        this.transactionId = "TXN" + System.currentTimeMillis();
+        this.transactionId = "TXN" + System.currentTimeMillis() + "_" + (int)(Math.random() * 1000);
         this.accountNumber = accountNumber;
         this.type = type;
         this.amount = amount;

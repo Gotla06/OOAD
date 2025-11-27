@@ -1,3 +1,5 @@
+import java.util.List;
+
 public class DashboardController {
     private BankController bankController;
     private Bank bank;
@@ -18,13 +20,13 @@ public class DashboardController {
 
     public void handleRefresh() {
         System.out.println("Refreshing dashboard for customer: " + currentCustomerId);
+        // In a real implementation, this would refresh the data
     }
 
     public void handleAddAccount() {
         bankController.showAccountCreationView();
     }
 
-    // NEW METHODS FOR DEPOSIT AND WITHDRAWAL
     public void handleDeposit() {
         bankController.showDepositView(currentCustomerId);
     }
@@ -50,7 +52,7 @@ public class DashboardController {
             sb.append("ACCOUNTS:\n");
             sb.append("=========\n");
 
-            java.util.List<Account> accounts = bank.getCustomerAccounts(currentCustomerId);
+            List<Account> accounts = bank.getCustomerAccounts(currentCustomerId);
             if (accounts.isEmpty()) {
                 sb.append("No accounts found.\n");
             } else {
@@ -72,13 +74,13 @@ public class DashboardController {
 
     public String getCustomerTransactionsInfo() {
         StringBuilder sb = new StringBuilder();
-        java.util.List<Account> accounts = bank.getCustomerAccounts(currentCustomerId);
+        List<Account> accounts = bank.getCustomerAccounts(currentCustomerId);
 
         sb.append("RECENT TRANSACTIONS:\n");
         sb.append("===================\n");
 
         for (Account account : accounts) {
-            java.util.List<Transaction> transactions = bank.getAccountTransactions(account.getAccountNumber());
+            List<Transaction> transactions = bank.getAccountTransactions(account.getAccountNumber());
             if (!transactions.isEmpty()) {
                 sb.append(account.getAccountType()).append(" (").append(account.getAccountNumber()).append("):\n");
                 for (Transaction transaction : transactions) {

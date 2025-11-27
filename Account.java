@@ -21,11 +21,17 @@ public abstract class Account {
     public void deposit(double amount) {
         if (amount > 0) {
             balance += amount;
-            System.out.println("Deposited: BWP " + amount + " | Account: " + accountNumber +
+            System.out.println("✅ Deposited: BWP " + amount + " | Account: " + accountNumber +
                     " | New Balance: BWP " + balance);
         } else {
-            System.out.println("Invalid deposit amount: " + amount);
+            System.out.println("❌ Invalid deposit amount: " + amount);
         }
+    }
+
+    // Default withdraw method - only works for accounts that implement Withdrawable
+    public boolean withdraw(double amount) {
+        System.out.println("❌ Withdrawals not allowed from " + getAccountType() + " account: " + accountNumber);
+        return false;
     }
 
     public double getBalance() {
